@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="/static/css/mvp.css" />
+    <link rel="stylesheet" href="/static/css/common.css" />
+    <title>ESP32 WoL Utility - Home</title>
+</head>
+<body>
+<div class="header">
+    <h3>ESP32 WoL utility</h3>
+</div>
+<main>
+    <section id="cardContainer">
+    </section>
+    <section>
+        <form action="#" onsubmit="remote_add_device(); return false">
+            <header><h3>Add a new device</h3></header>
+            <label for="mac">Mac Address:</label>
+            <input type="text" id="mac" name="mac" size="20" placeholder="aa-bb-cc-11-22-33" pattern="[a-f0-9]{2}[\:\-]{1}[a-f0-9]{2}[\:\-]{1}[a-f0-9]{2}[\:\-]{1}[a-f0-9]{2}[\:\-]{1}[a-f0-9]{2}[\:\-]{1}[a-f0-9]{2}" required />
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" size="20" required />
+            <label for="ip">IP (optional):</label>
+            <small>The pc you are connecting from<br/> has this IP: <span id="thisPcIp">N/A</span></small>
+            <input type="text" id="ip" name="ip" size="20" />
+            <button type="submit" id="addDevice">Add</button>
+        </form>
+
+        <aside>
+            <table>
+                <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>Memory</td>
+                    <td id="infoMEM">XXX (Y% free)</td>
+                </tr>
+                <tr>
+                    <td>Signal</td>
+                    <td id="infoSSID">SSID-NAME (XX %)</td>
+                </tr>
+                <tr>
+                    <td>MAC</td>
+                    <td id="infoMAC">XX:XX:XX:XX:XX:XX</td>
+                </tr>
+                <tr>
+                    <td>IP</td>
+                    <td id="infoIP">X.X.X.X</td>
+                </tr>
+                <tr>
+                    <td>Netmask</td>
+                    <td id="infoMASK">W.W.W.W</td>
+                </tr>
+                <tr>
+                    <td>Gateway</td>
+                    <td id="infoGATEWAY">Z.Z.Z.Z</td>
+                </tr>
+                <tr>
+                    <td>DNS</td>
+                    <td  id="infoDNS">W.W.W.W</td>
+                </tr>
+                </tbody>
+            </table>
+        </aside>
+    </section>
+</main>
+<script lang="javascript">
+    let devices = [];
+    let ping_states = [];
+    let token = null;
+    let thisPcIp = document.getElementById("thisPcIp");
+    let devicesContainer = document.getElementById("cardContainer");
+
+    function login_redirect() {
+        localStorage.removeItem("token");
+        location.href = "/static/login.html";
+    }
+
+    function remote_list_devices() {
+      const xhttp = new XMLHttpRequest();
+      xhttp.onload = function() {
+          console.debug("Server Response: ", this.responseText);
+          if (this.status === 403) {
+              return login_redirect();
+          }
+
+          let response = JSON.parse(this.responseText);
+          devices = response.data;
+          draw_devices(response.data);
+        }
+      xhttp.open("GET", "/api/v1/devices", true);
+      xhttp.setRequestHeader("wol-token", token);
+      xhttp.send();
+    }
+
+    function remote_delete_device(mac, element) {
+        let spinner = document.createElement("div");
+        spinner.className = "lds-dual-ring";
+
+        const xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState === XMLHttpRequest.DONE) {
+                element.style.visibility = "visible";
+                spinner.remove();
+                console.debug("Server Response: ", this.responseText);
+                if (this.status === 200) {
+                    delete devices[mac];
+                    element.parentElement.parentElement.remove();
+                } else if (this.status === 403) {
+                    return login_redirect();
+                } else {
+                    alert("An error occurred.");
+                }
+            }
+        }
+        xhttp.open("DELETE", "/api/v1/devices/"+mac, true);
+        xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xhttp.setRequestHeader("wol-token", token);
+        xhttp.send();
+        element.style.visibility = "hidden";
+        element.parentElement.appendChild(spinner);
+    }
+
+    function remote_add_device() {
+        let saveButton = document.getElementById("addDevice");
+        let ipInput = document.getElementById("ip");
+        let macInput = document.getElementById("mac");
+        let nameInput = document.getElementById("name");
+
+        // TODO: input validation
+        let device_data = {
+            "mac": macInput.value,
+            "name": nameInput.value,
+            "ip": ipInput.value
+        }
+
+        let spinner = document.createElement("div");
+        spinner.className = "lds-dual-ring";
+
+        const xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState === XMLHttpRequest.DONE) {
+                saveButton.style.visibility = "visible";
+                spinner.remove();
+                console.debug("Server Response: ", this.responseText);
+                if (this.status === 200) {
+                    let response = JSON.parse(this.responseText);
+                    draw_device(response.data);
+                    ipInput.value="";
+                    macInput.value="";
+                    nameInput.value="";
+                    alert("Device has been added successfully!");
+                } else if (this.status === 403) {
+                    return login_redirect();
+                } else {
+                    alert("An error occurred.");
+                }
+            }
+        }
+        xhttp.open("POST", "/api/v1/devices", true);
+        xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xhttp.setRequestHeader("wol-token", token);
+        xhttp.send(JSON.stringify(device_data));
+        saveButton.style.visibility = "hidden";
+        saveButton.parentElement.appendChild(spinner);
+    }
+
+    function remote_ping(ip, callback) {
+        const xhttp = new XMLHttpRequest();
+        xhttp.onload = function() {
+          console.debug("Server Response: ", this.responseText);
+          if (this.status === 403) {
+              return login_redirect();
+          }
+          try {
+              let response = JSON.parse(this.responseText);
+              callback(response, null);
+          } catch {
+              callback(null, "Unhandled error occurred.");
+          }
+        }
+        xhttp.open("GET", "/api/v1/devices/"+ip+"/ping", true);
+        xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xhttp.setRequestHeader("wol-token", token);
+        xhttp.send();
+    }
+
+    function run_wol(mac, element) {
+        let spinner = document.createElement("div");
+        spinner.className = "lds-dual-ring";
+
+        const xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState === XMLHttpRequest.DONE) {
+                element.style.visibility = "visible";
+                spinner.remove();
+                console.debug("Server Response: ", this.responseText);
+                if (this.status === 200) {
+                    let response = JSON.parse(this.responseText);
+                    alert(response.data)
+                } else if (this.status === 403) {
+                    return login_redirect();
+                } else {
+                    alert("An error occurred.");
+                }
+            }
+        }
+        xhttp.open("POST", "/api/v1/devices/"+mac+"/wol", true);
+        xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xhttp.setRequestHeader("wol-token", token);
+        xhttp.send();
+        element.style.visibility = "hidden";
+        element.parentElement.appendChild(spinner);
+    }
+
+    function create_device(device) {
+        let div = document.createElement("aside");
+
+        let title = document.createElement("h3");
+        title.innerText="Name: " + device.name;
+        let state = document.createElement("sup");
+        state.innerText = "checking...";
+        ping_states[device.ip] = state;
+        title.appendChild(state);
+        let mac = document.createElement("p");
+        mac.innerText="Mac:" + device.mac;
+        let ip = document.createElement("p");
+        ip.innerText="IP:" + device.ip;
+        let deleteP = document.createElement("p");
+        let deleteLink = document.createElement("a");
+        deleteLink.style.cursor = "pointer";
+        deleteLink.innerHTML = "<small>Delete</small>";
+        deleteLink.setAttribute("onclick", "remote_delete_device('"+device.mac+"', this)");
+        deleteP.appendChild(deleteLink);
+        let turnOn = document.createElement("a");
+        turnOn.style.cursor = "pointer";
+        turnOn.innerHTML = "<b>Turn ON</b>";
+        turnOn.setAttribute("onclick", "run_wol('"+device.mac+"', this)");
+        div.appendChild(title);
+        div.appendChild(mac);
+        div.appendChild(ip);
+        div.appendChild(deleteP);
+        div.append(turnOn);
+        return div;
+    }
+
+    function draw_devices(devices) {
+        // Clear all
+        devicesContainer.innerHTML="";
+        ping_states = [];
+
+        // add single device
+        for(let i=0;i<devices.length;i++) {
+            draw_device(devices[i]);
+        }
+    }
+
+    function draw_device(device) {
+        let div = create_device(device);
+        devicesContainer.appendChild(div);
+    }
+
+    function check_device_awake(device_ip) {
+        remote_ping(device_ip, function(resp, error) {
+            if (error === null)
+                ping_states[device_ip].innerText = resp.data === true ? "ON" : "OFF";
+            else
+                ping_states[device_ip].innerText = "?";
+        });
+    }
+
+    function poll_ping_devices() {
+        for (let i=0; i<devices.length;i++) {
+            let device_ip=devices[i].ip;
+            let delay = Math.max(i*500, 10000);
+            window.setTimeout(check_device_awake,delay,device_ip);
+        }
+    }
+
+    function fetch_info() {
+        let infoDNS = document.getElementById("infoDNS");
+        let infoGATEWAY = document.getElementById("infoGATEWAY");
+        let infoMASK = document.getElementById("infoMASK");
+        let infoIP = document.getElementById("infoIP");
+        let infoMAC = document.getElementById("infoMAC");
+        let infoSSID = document.getElementById("infoSSID");
+        let infoMEM = document.getElementById("infoMEM");
+
+        const xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState === XMLHttpRequest.DONE) {
+                console.debug("Server Response: ", this.responseText);
+                if (this.status === 200) {
+                    let response = JSON.parse(this.responseText);
+                    let totalMem = response.data.memory.used+response.data.memory.free;
+                    infoDNS.innerText = response.data.network.dns;
+                    infoGATEWAY.innerText = response.data.network.gateway;
+                    infoMASK.innerText = response.data.network.netmask;
+                    infoIP.innerText = response.data.network.ip;
+                    infoSSID.innerHTML = response.data.network.signalStrength + "db <br/><small>( SSID:"+response.data.network.ssid+")</small>";
+                    infoMAC.innerText = response.data.network.mac;
+                    infoMEM.innerHTML = response.data.memory.used + "/" + totalMem + " <br/><small>(" + (response.data.memory.used/totalMem*100).toFixed()+"%)</small>";
+                    thisPcIp.innerText = response.data.caller.ip;
+                } else if (this.status === 403) {
+                    return login_redirect();
+                }
+            }
+        }
+        xhttp.open("GET", "/api/v1/system/info", true);
+        xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xhttp.setRequestHeader("wol-token", token);
+        xhttp.send();
+    }
+
+    // Setup auth header for authenticated Ajax calls
+    token = localStorage.getItem("token");
+    if (token === null) {
+        login_redirect();
+    }
+    remote_list_devices();
+    poll_ping_devices();
+    window.setInterval(poll_ping_devices, 15000);
+    fetch_info();
+    window.setInterval(fetch_info, 30000);
+</script>
+</body>
+</html>

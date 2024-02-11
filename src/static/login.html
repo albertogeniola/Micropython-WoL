@@ -1,0 +1,55 @@
+<html>
+<head>
+    <link rel="stylesheet" href="/static/css/mvp.css" />
+    <link rel="stylesheet" href="/static/css/common.css" />
+    <title>Webking's WoL - Home</title>
+</head>
+<body>
+<div class="header">
+    <h3>Webking's WoL</h3>
+</div>
+<main>
+    <section>
+        <form onsubmit="login(); return false;">
+            <header><h2>Login</h2></header>
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" size="20" value="admin" readonly />
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" size="20" />
+            <button type="submit" id="login-btn">Login</button>
+        </form>
+    </section>
+</main>
+<script lang="javascript">
+    let loginbtn = document.getElementById("login-btn");
+    let username = document.getElementsByName("username")[0];
+    let password = document.getElementsByName("password")[0];
+    function login() {
+        let spinner = document.createElement("div");
+        spinner.className = "lds-dual-ring";
+        const xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState === XMLHttpRequest.DONE) {
+                loginbtn.style.visibility = "visible";
+                spinner.remove();
+                console.debug("Server Response: ", this.responseText);
+                if (this.status === 200) {
+                    let response = JSON.parse(this.responseText);
+                    // Store the token
+                    let token = response.data.token;
+                    localStorage.setItem("token", token);
+                    location.href = "/";
+                } else {
+                    alert("An error occurred.");
+                }
+            }
+        }
+        xhttp.open("POST", "/api/v1/users/login", true);
+        xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xhttp.send(JSON.stringify({"username": username.value, "password": password.value}));
+        loginbtn.style.visibility = "hidden";
+        loginbtn.parentElement.appendChild(spinner);
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,301 @@
+<html>
+<head>
+    <link rel="stylesheet" href="/static/css/mvp.css" />
+    <link rel="stylesheet" href="/static/css/common.css" />
+    <style>
+        #modal-container {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: #000000ea;
+            color: #d9d9d9;
+        }
+        #modal {
+            overflow: hidden;
+            margin:10px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+    <title>Webking's WoL - Installation</title>
+</head>
+<body>
+<div id="modal-container" class="hidden">
+    <div id="modal">
+        <h2>Installation in progress</h2>
+        <p><mark>Check the device leds now!</mark></p>
+        <p>The ESP32 device is now rebooting and applying the provided configuration.</p>
+        <p>When doing so, the onboard blue led will blink quickly. If the <b>configuration succeeds</b>,
+            the on-board blue led will stay <b>fixed ON</b>, meaning that
+            the device was able to connect to the given WiFi network. <b>If the configuration fails</b>, the
+            device will reboot again and put itself into configuration mode again, so that you can attempt
+            a new installation. In such case, the onboard led will <b>blink slowly</b>.
+        </p>
+        <p><b>Note</b>: when the configuration succeeds, the device will take an IP address from the DHCP on the
+            wifi network, and you can reach the Web-Ui using that IP. Make sure your router is configured to assign
+            always the same IP to the MAC address of the ESP32.
+            Also, bear in mind that in case on installation failure, you need to connect again to the ESP32 WOL
+            WiFi, as your PC will lose the connection to that WiFi as the ESP32 attempts the configuration.
+        </p>
+        <p><mark>If you see a FIXED blue led, connect to the same Wifi of the ESP (<span id="target_wifi"></span>)
+            and wait until this page refreshes.</mark>
+        </p>
+    </div>
+</div>
+<header>
+    <h3>Initial Configuration</h3>
+    <p>
+        The Wake-On-Lan device is currently not-configured. Please specify the following information and press SAVE.
+        The device will reboot and attempt the connection to the specified WiFi. If the connection succeeds,
+        the onboard lead will stay ON. If it fails, the led will start blinking again and the device will
+        reboot itself into configuration mode.
+    </p>
+</header>
+<main id="main">
+    <section>
+        <form onsubmit="save_configuration(); return false;">
+            <label for="admin_password">Admin's password</label>
+            <small>Choose the password that will be associated to the admin username.</small>
+            <br/>
+            <small>You will use this one to login to the WOL utility.</small>
+            <input type="password" id="admin_password" name="admin_password" size="40" minlength="6">
+            <label for="admin_password_confirm">Confirm admin's password</label>
+            <small>Type the same password again to confirm you spelled it right</small>
+            <input type="password" id="admin_password_confirm" name="admin_password_confirm" size="40" minlength="6">
+            
+            <div id="scanned_ssid_container">
+            <label for="wifi_list">Select the Wifi SSID where to connect</label>
+            <select id="wifi_list" onchange="on_wifi_change">
+            </select>
+            </div>
+            <label>
+                <input id="use_manual_ssd" type="checkbox" onclick="set_manual_ssid(this);">Manual SSID Input
+            </label>
+            <div id="manual_ssid_container" style="display:none">
+            <small>Insert the name of the SSID where the ESP32 will connect to.</small>
+            <input type="text" id="ssid" name="ssid" size="40">
+            </div>
+            <div id="ssid_password_container">
+            <label for="ssid_password">Wifi Password</label>
+            <small>Insert the password for that SSID.</small>
+            <br/>
+            <input type="password" id="ssid_password" name="ssid_password" size="40">
+            <label>
+                <input type="checkbox" onclick="show_password(this);">Show Password
+            </label>
+            </div>
+            <br/>
+            <details>
+                <summary>
+                    Advanced Network Configuration
+                </summary>
+                <p style="max-width: 400px;">By default, the ESP32 will get an IP from the DHCP server on your network.
+                    In case you want it to bind a specific IP, go ahead and configure it.
+                    Please note that when setting a static IP, <b>you must also specify its netmask,
+                    gateway address and dns server</b>.
+                </p>
+                <br/>
+                <label for="static_ip">Static IP</label>
+                <small>Which static IP address the ESP32-WoL should bind.</small>
+                <input type="text" id="static_ip" name="static_ip" size="16" oninput="ip_changed(this)" pattern="[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}">
+                <label for="netmask">Network mask</label>
+                <small>Specify the network mask in the form XXX.XXX.XXX.XXX</small>
+                <input type="text" id="netmask" name="netmask" size="16" pattern="[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}" disabled>
+                <label for="gateway">Default gateway</label>
+                <small>Specify the default gateway address</small>
+                <input type="text" id="gateway" name="gateway" size="16" pattern="[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}" disabled>
+                <label for="dns">DNS Server address</label>
+                <small>Specify the DNS server address</small>
+                <input type="text" id="dns" name="dns" size="16" pattern="[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}" disabled>
+            </details>
+            <button type="submit" id="submit">Apply and save</button>
+        </form>
+    </section>
+</main>
+<script lang="javascript">
+    let timeouts = 0;
+    let check_interval_id = null;
+    function show_password(evt) {
+        document.getElementById("ssid_password").type = evt.checked ? "text" : "password";
+    }
+
+    function show_modal() {
+        document.getElementById("main").className="hidden";
+        document.getElementById("modal-container").className = "";
+    }
+
+    function ip_changed(ipel) {
+        let netmask = document.getElementById("netmask");
+        let dns = document.getElementById("dns");
+        let gateway = document.getElementById("gateway");
+        if (ipel.value!=="") {
+            netmask.setAttribute("required", "required");
+            dns.setAttribute("required", "required");
+            gateway.setAttribute("required", "required");
+            netmask.removeAttribute("disabled");
+            dns.removeAttribute("disabled");
+            gateway.removeAttribute("disabled");
+        } else {
+            netmask.removeAttribute("required");
+            dns.removeAttribute("required");
+            gateway.removeAttribute("required");
+            netmask.setAttribute("disabled", "disabled");
+            dns.setAttribute("disabled", "disabled");
+            gateway.setAttribute("disabled", "disabled");
+        }
+    }
+
+    function scan_wifi() {
+        console.info("Issuing wifi scanning...");
+        const xhttp = new XMLHttpRequest();
+        xhttp.timeout = 8000;
+        xhttp.onreadystatechange = function() {
+            console.debug(this);
+            if (this.readyState === XMLHttpRequest.DONE) {
+                console.debug(this.status);
+                if (this.status === 200) {
+                    let response = JSON.parse(this.responseText);
+                    let wifis = response.data
+                    populate_wifi_box(wifis);
+                }
+                else {
+                    alert("Wifi scanning failed.")
+                    populate_wifi_box([]);
+                }
+            }
+        }
+        xhttp.ontimeout = (e) => {
+            alert("Wifi scanning failed.");
+            populate_wifi_box([]);
+        };
+        xhttp.open("GET", "/api/v1/scan", true);
+        xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xhttp.send();
+    }
+
+    function populate_wifi_box(wifi_items) {
+        let select = document.getElementById("wifi_list");
+        select.innerHTML = "";
+        for (let i=0; i < wifi_items.length; i++) {
+            if (wifi_items[i].ssid === "") 
+                continue;
+            let option = document.createElement("option");
+            option.setAttribute("data-open", wifi_items[i].security===0);
+            option.setAttribute("data-ssid", wifi_items[i].ssid);
+            option.innerHTML = (wifi_items[i].security > 0 ? "&#x1F512;" : "") + wifi_items[i].ssid;
+            select.add(option);
+        }
+    }
+
+    function set_manual_ssid(checkbox) {
+        document.getElementById("manual_ssid_container").style.display = checkbox.checked ? "block": "none";
+        document.getElementById("scanned_ssid_container").style.display = checkbox.checked ? "none": "block";
+    }
+
+    function on_wifi_change(event) {
+        let wifi_open = event.target.getAttribute("data-open");
+        if (wifi_open) {
+            document.getElementById("ssid_password").value = "";
+        }
+        document.getElementById("ssid_password_container").style.display = wifi_open ? "none" : "block";
+    }
+
+    function check_for_login() {
+        console.info("Checking for 'mywol' on the network...");
+        const xhttp = new XMLHttpRequest();
+        xhttp.timeout = 2000;
+        xhttp.onreadystatechange = function() {
+            console.debug(this);
+            if (this.readyState === XMLHttpRequest.DONE) {
+                console.debug(this.status);
+                if (this.status === 200) {
+                    window.location.href = "http://mywol";
+                }
+            }
+        }
+        xhttp.ontimeout = (e) => {
+            timeouts++;
+            if (timeouts > 30) {
+                alert("It was impossible to check for the MYWOL device on the network. Check the led status on the " +
+                    "device and start-over if necessary.");
+                window.clearInterval(check_interval_id);
+                window.location.reload();
+            }
+        };
+        xhttp.open("GET", "http://mywol/api/v1/system/alive", true);
+        xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xhttp.send();
+    }
+
+    function save_configuration() {
+        let spinner = document.createElement("div");
+        spinner.className = "lds-dual-ring";
+        let submitButton = document.getElementById("submit");
+        let adminPasswordInput = document.getElementById("admin_password");
+        let adminPasswordConfirmInput = document.getElementById("admin_password_confirm");
+        let wifiScanSelector = document.getElementById("wifi_list");
+
+        // Handle ssid
+        let use_manual_ssid = document.getElementById("use_manual_ssd").checked;
+        let ssid = use_manual_ssid ? document.getElementById("ssid").value : wifiScanSelector.options[wifiScanSelector.selectedIndex].getAttribute("data-ssid");
+        let ssidPassword = document.getElementById("ssid_password").value;
+
+        let staticIpInput = document.getElementById("static_ip");
+        let netmaskInput = document.getElementById("netmask");
+        let dnsInput = document.getElementById("dns");
+        let gatewayInput = document.getElementById("gateway");
+
+        if (adminPasswordConfirmInput.value !== adminPasswordInput.value) {
+            alert("Admin's password and Admin's password confirmation do not match.");
+            adminPasswordInput.value="";
+            adminPasswordConfirmInput.value="";
+            return;
+        }
+
+        const xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState === XMLHttpRequest.DONE) {
+                submitButton.style.visibility = "visible";
+                spinner.remove();
+                console.debug("Server Response: ", this.responseText);
+                if (this.status === 200) {
+                    alert("Configuration has been issued.");
+                    show_modal();
+                    timeouts = 0;
+                    check_interval_id = window.setInterval(check_for_login, 10000);
+                } else if (this.status === 403) {
+                    return login_redirect();
+                } else {
+                    alert("An error occurred.");
+                }
+            }
+        }
+        xhttp.open("POST", "/api/v1/install", true);
+        xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xhttp.send(JSON.stringify(
+            {
+                "network": {
+                    "ssid": ssid,
+                    "ssidPassword": ssidPassword,
+                    "ip": staticIpInput.value === "" ? null : staticIpInput.value,
+                    "netmask": staticIpInput.value === "" ? null : netmaskInput.value,
+                    "gateway": staticIpInput.value === "" ? null : gatewayInput.value,
+                    "dns": staticIpInput.value === "" ? null : dnsInput.value
+                },
+                "password": adminPasswordInput.value
+            }
+        ));
+        document.getElementById("target_wifi").innerText = ssid;
+        submitButton.style.visibility = "hidden";
+        submitButton.parentElement.appendChild(spinner);
+    }
+</script>
+<script>
+    // Invoke Wifi scanning as soon as the DOM has rendered.
+    scan_wifi();
+</script>
+</body>
+</html>
