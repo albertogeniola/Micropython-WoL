@@ -2,9 +2,8 @@ import machine
 
 from configuration import _configuration
 from device import _dev_registry
-from microdot_asyncio import Microdot, send_file
+from microdot import Microdot, send_file
 from web_common import make_json_response, BadRequest
-from hardware_initializer import hw
 
 
 app = Microdot()

@@ -67,6 +67,7 @@ def connect(ssid, ssid_password, hostname, network_config=None, wifi_attempt_tim
 
 def scan(configure_station=False):
     # Note! This method needs to be invoked while the AP is in STATION mode. 
+    gc.collect()
     ap_if = network.WLAN(network.STA_IF)
     if configure_station:
         ap_if.active(True)

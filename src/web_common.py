@@ -1,9 +1,8 @@
 import ujson
 
-from microdot_asyncio import Response
+from microdot.microdot import Response
 
 _RESP_HEADERS = {"Content-Type": "application/json"}
-_HTML_HEADERS = {"Content-Type": "text/html"}
 
 
 class BadRequest(Exception):

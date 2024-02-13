@@ -5,8 +5,8 @@ import uping
 from configuration import _configuration
 from constants import BROADCAST_IP
 from device import _dev_registry
-from microdot_asyncio import Microdot, send_file
-from token import verify_token, create_token
+from microdot import Microdot, send_file
+from mytoken import verify_token, create_token
 from web_common import make_json_response, BadRequest
 import ubinascii
 import network

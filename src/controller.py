@@ -3,7 +3,6 @@ import time
 from os import remove as fremove
 
 import machine
-import json
 import wifi
 from configuration import _configuration
 from constants import OPMODE_NOT_CONFIGURED, OPMODE_CONFIGURED, OPMODE_CONFIGURING, DEBUG, DEFAULT_ESSID, DEFAULT_PASSWORD, DEFAULT_HOSTNAME, RESET_TIMER
