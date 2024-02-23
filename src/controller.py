@@ -54,6 +54,7 @@ def _run_configured():
     gc.collect()
     from web_configured import app
     hw.display.set_configured(_configuration.ssid, wifi_config[0])
+    hw.buzzer.beep(long=False)
     app.run(debug=DEBUG, host=wifi_config[0], port=80)
 
 
@@ -87,6 +88,7 @@ def _run_unconfigured():
     hw.display.notify_scan_over()
     essid, password, wifi_config = wifi.set_ap(DEFAULT_ESSID, DEFAULT_PASSWORD, DEFAULT_HOSTNAME)
     hw.display.set_unconfigured(essid, password, wifi_config[0])
+    hw.buzzer.beep(long=True)
     gc.collect()
     from web_unconfigured import app
     app.run(debug=DEBUG, host=wifi_config[0], port=80)

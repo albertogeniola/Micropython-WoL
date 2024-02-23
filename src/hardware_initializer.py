@@ -3,10 +3,12 @@ from constants import HW_CONF_FILENAME
 import json
 
 from display import Display
+from buzzer import Buzzer
 
 class Hardware:
     def __init__(self) -> None:
         self.display = Display()
+        self.buzzer = Buzzer()
 
 
 def init():
@@ -32,6 +34,15 @@ def init():
             print(f"Setting up display with config {display_conf}")
             hw.display = I2C1306(**display_conf.get("config"))
     
+    # {"buzzer": {"type":"piezo_passive", "config": {"pwm_pin": 23}}}
+    buzzer_conf = jsondata.get("buzzer", None)
+    if buzzer_conf is not None:
+        buzzer_type = buzzer_conf.get("type")
+        print(f"Found buzzer conf for {buzzer_type}")
+        if buzzer_type == "piezo_passive":
+            from piezo_buzzer import PassiveBuzzer
+            print(f"Setting up buzzer with config {buzzer_conf}")
+            hw.buzzer = PassiveBuzzer(**buzzer_conf.get("config"))
     
 
 hw = Hardware()

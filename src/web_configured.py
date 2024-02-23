@@ -109,6 +109,7 @@ async def wol(request, mac):
     dev = _dev_registry.get_devices().get(mac)
     dev_name =  dev.name if dev is not None else "Unknown"
     hw.display.notify_wol(mac, dev_name)
+    hw.buzzer.beep(long=True)
     magic_packet.send_magic_packet(mac, ip_address=BROADCAST_IP, port=9)
     encoded = make_json_response("Packet has been sent")
     return encoded
