@@ -1,3 +1,4 @@
 adafruit-ampy
-mpy-cross
 minify-html
+esptool
+mypy-cross

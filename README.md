@@ -9,6 +9,9 @@ This tool is suited for people who want to turn on their PC-devices via Wake-On-
 but cannot do that using their current home gateways or have no domotic/server device
 where to install such a service.
 
+<a href="docs/images/login.png"><img src="docs/images/login.png" width=300></a>
+<a href="docs/images/main.png"><img src="docs/images/main.png" width=300></a>
+
 ## Why ESP32?
 The ESP32 is a small, cheap, low-power and powerful micro-controller.
 This project turns that tiny chip into a Wake-On-Lan service provider 
@@ -52,15 +55,16 @@ you find the official instructions to do so.
 For instance, to install the Micropython firmware on WROOM ESP32 device connected to port COM5, just download the latest image from the website above (at the time of writing is ESP32_GENERIC-20240105-v1.22.1.bin) and install as follows:
 
 ```bash 
-python3 -m esptool esptool.py --chip esp32 --port COM5 write_flash -z 0x1000 ESP32_GENERIC-20240105-v1.22.1.bin 
+python3 -m esptool esptool.py --port COM5 write_flash -z 0x1000 ESP32_GENERIC-20240105-v1.22.1.bin 
 ```
+
+Please note down the specific version of the firmware (in this case, `1.22.1`). You will need it later on.
 
 **Note: this tool has been tested only with v1.22.1 (2024-01-05) micropython firmware**. 
 There is no guarantee it is compatible with other firmware versions. 
 
 ### 2. Install this software into the ESP32
-Once the ESP32 device is capable of running python software, you need to upload the python
-scripts into the device to turn it into a fully functional ESP32-WOL. 
+Once the ESP32 device is capable of running python software, you need to upload the python scripts into the device to turn it into a fully functional ESP32-WOL. 
 
 To do so, first download the repository source code.
 
@@ -73,33 +77,43 @@ Then let's create a virtual-env and install the required package dependency to r
 ```bash
 cd ESP32-WoL
 python3 -m venv .venv
-source .venv/bin/activate # of if you are on windows: .venv\Scripts\activate.bat
-pip3 install -r requirements.txt
+source .venv/bin/activate # or if you are on windows: .venv\Scripts\activate.bat
+pip install -r requirements.txt
 ```
 
-After that, we just run the upload script, that is provided within this repository.
+After that, we need to install the cross-compilation library (mpy-cross).
+Retrieve the specific version of your micropython installed version (in this example was `1.22.1`) and install the corresponding mpy-cross package, as follows:
 
 ```bash
-python3 upload.py _COM_PORT_NAME_OR_TTY_
+python -m pip install mpy-cross==1.22.1
 ```
 
-Replace `_COM_PORT_NAME_OR_TTY_` with the serial port path/name of your ESP32 device.
-On Windows, they are usually `COMX` (where X is an integer); on Linux it is in the form of
-`/dev/ttyUSB0`
+Remember: if you using a different version of micropython, change the `1.22.1` parameter accordingly.
 
-When you are done, the onboard device led should start blinking slowly: that means the
-device entered the "installation mode". If that's the case, you can proceed with the next
-section. If the led does not blink, it probably means some error occurred during the 
-upload or flash process. You should start over and make sure to follow every step again.
+At this point, we can now perform the program upload. To do so, disconnect your ESP32 device and run the following command. 
+Replace `_COM_PORT_NAME_OR_TTY_` with the serial port path/name of your ESP32 device. On Windows, they are usually `COMX` (where X is an integer); on Linux it is in the form of `/dev/ttyUSB0`
+
+```bash
+python upload_mpy.py _COM_PORT_NAME_OR_TTY_
+```
+
+Then, plug the ESP32 device via USB within 30 seconds: the flashing process will start. 
+
+```
+...
+Pre-compiling ...
+Pre-compiling ...
+Pre-compiling ...
+Uploading boot.py, main.py and hw.json
+Waiting 30 seconds for pyboard ....
+```
+
+When you are done, the onboard device led should start blinking slowly: that means the device entered the "installation mode". If that's the case, you can proceed with the next section. If the led does not blink, it probably means some error occurred during the upload or flash process. You should start over and make sure to follow every step again.
 
 ### 3. Configure the ESP32-WoL
-At this stage, the ESP32 is flashed with micropython and it has been loaded with 
-the necessary python files to run our Web service. We can now run the configuration
-wizard.
+At this stage, the ESP32 is flashed with micropython and it has been loaded with the necessary python files to run our Web service. We can now run the configuration wizard.
 
-The first step is to use your laptop or smartphone to connect to the Access Point 
-named "ESP_WOL" that the ESP32 sets up when it is in installation mode. 
-Connect to that WIFI using the the following password: `espwol123`.
+The first step is to use your laptop or smartphone to connect to the Access Point named "ESP_WOL" that the ESP32 sets up when it is in installation mode. Connect to that WIFI using the the following password: `espwol123`.
 
 Once connected to the WiFi, open a browser and navigate to `http://192.168.4.1`. 
 From that page, you will configure:
@@ -121,13 +135,8 @@ before. If that happens, you should connect again to ESP_WOL wifi and start over
 configuration.
 
 On the contrary, if the ESP32 correctly connects to the target WiFi,
-the onboard led will turn to FIXED-ON. When this happens, the web-ui should automatically
-redirect you to the ESP32-WoL web-administration page. If that does not happen,
-you can reach it by typing `http://<target_ip>` where `target_ip` is the IP address
-that the ESP32 device has been assigned via DHCP or has bound statically.
-The ESP32_WOL will advertise its IP via bluetooth le. You can use the `BLE Scanner` android
-app to get this info: you jus need to launch the APP and scan for BLE device. You'll see 
-an entry named `ESP32-WoL <IP_ADDRESS>`.
+the onboard led will turn to FIXED-ON. When this happens, the web-ui should automatically redirect you to the ESP32-WoL web-administration page. If that does not happen, you can reach it by typing `http://<target_ip>` where `target_ip` is the IP address that the ESP32 device has been assigned via DHCP or has bound statically.
+The ESP32_WOL will advertise its IP via bluetooth le. You can use the `BLE Scanner` android app to get this info: you jus need to launch the APP and scan for BLE device. You'll see an entry named `ESP32-WoL <IP_ADDRESS>`.
 
 ### 4. Allow internet access to ESP32-WoL
 In order to be functional to its original objective, the ESP32-WoL should be accessible
@@ -136,31 +145,23 @@ from internet. This means that you should:
 - Enable port-forwarding from WAN IP to ESP32 internal IP, on TCP port 80 
 - Optionally configure dynamic dns on your router device in case you have a dynamic external IP address from the ISP
 
-Specific instructions on how to achieve such configuration objectives are out of the scope of this
-document, as every cpe/router device might differ. The internet is full of tutorials on how to do so,
-though. Just google for your router model and "how to port forward" o "how to static DHCP lease" and you
-should find some nice tutorial to help you out.
+Specific instructions on how to achieve such configuration objectives are out of the scope of this document, as every cpe/router device might differ. The internet is full of tutorials on how to do so, though. Just google for your router model and "how to port forward" o "how to static DHCP lease" and you should find some nice tutorial to help you out.
 
 ### 5. Add WoL devices
 If you made up to this stage, congratulations: you are done. 
-It is now time to register the LAN devices you would like to wake up via the ESP32-WoL,
-so that you don't need to remember their MAC address by memory.
+It is now time to register the LAN devices you would like to wake up via the ESP32-WoL, so that you don't need to remember their MAC address by memory.
 
-To do so, simply access the Web-UI of the ESP32-WoL at `http://mywol` o `http://<IP_OF_ESP32_WOL>`,
-log in with the admin password and add a new device. For a new device to be valid you must 
-specify its mac address and a name. You could optionally set also its IP (in case it is static):
-if you do so, the ESP32-WoL will be able to check whether the target device is already ON or OFF.
+To do so, simply access the Web-UI of the ESP32-WoL at `http://mywol` o `http://<IP_OF_ESP32_WOL>`, log in with the admin password and add a new device. For a new device to be valid you must specify its mac address and a name. You could optionally set also its IP (in case it is static): if you do so, the ESP32-WoL will be able to check whether the target device is already ON or OFF.
 
-*Note: if you don't specify the IP address of the target device, its "ON" or "OFF" status will be
-unreliable, but WoL packets will be delivered in any case, when you send them.*
-
+*Note: if you don't specify the IP address of the target device, its "ON" or "OFF" status will be unreliable, but WoL packets will be delivered in any case, when you send them.*
 
 
 ## Advanced Topics
-### Pre-compilation via mpy
-TODO
+### API interactions
+It is possible to interact with ESP32-WOL via REST APIs. You can find the API Open Specs in the `docs/swagger.yaml` file within this repository.
 
-### OLED Display
+
+### Hardware Setup
 TODO
 
 ### Configure wifi via config.json

@@ -1,0 +1,381 @@
+openapi: 3.0.3
+info:
+  title: ESP32-WOL
+  description: |-
+    Simple API interface to dialogate with ESP32-WoL device.
+    
+    Some useful links:
+    - [ESP32-WoL repository](https://github.com/albertogeniola/ESP32-WoL)
+  license:
+    name: MIT
+    url: https://github.com/albertogeniola/ESP32-WoL/blob/main/LICENSE.txt
+  version: 0.0.1
+servers:
+  - url: http://mywol
+paths:
+  /api/v1/system/alive:
+    get:
+      tags:
+      - system
+      summary: Check if board is alive
+      description: Ping the ESP32-WoL server to determine if it's alive
+      operationId: addPet
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  
+                  data:
+                    type: object
+          
+  /api/v1/users/login:
+    post:
+      tags:
+        - users
+      summary: Performs the login
+      description: 'Retrieve the token to be used for authenticated API calls'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequestBody'
+      responses:
+        '403':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailedLoginResponse'
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessfulLoginResponse'
+    
+  /api/v1/devices:
+    get:
+      tags:
+        - devices
+      summary: List device
+      description: 'List all the devices known to the controller'
+      parameters:
+        - in: header
+          name: X-Request-ID
+          required: true
+          description: "Authorization token retrieved via login"
+          content:
+            token:
+              example: "d41d8cd98f00b204e9800998ecf8427e"
+              
+      responses:
+        '200':
+          description: "Returns the list of the devices"
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/ListDevicesResponse'
+
+      security:
+        - authenticated:
+            - read:devices
+            
+    post:
+      tags:
+        - devices
+      summary: Add a new device
+      description: 'Register a new device as target device for WoL'
+      parameters:
+        - in: header
+          name: X-Request-ID
+          required: true
+          description: "Authorization token retrieved via login"
+          content:
+            token:
+              example: "d41d8cd98f00b204e9800998ecf8427e"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddDeviceRequestBody'
+      responses:
+        '200':
+          description: "Returns added devices"
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/AddDevicesResponse'
+
+      security:
+        - authenticated:
+            - read:devices
+  
+  /api/v1/devices/{mac}:
+    delete:
+      tags:
+        - devices
+      summary: Remove device
+      description: 'Unregister a device from the memorized list'
+      parameters:
+        - in: path
+          name: mac
+          description: "Mac address of a registered device to forget"
+          required: true
+          schema:
+            type: string
+            example: "16:43:a4:30:12:44" 
+        - in: header
+          name: X-Request-ID
+          required: true
+          description: "Authorization token retrieved via login"
+          content:
+            token:
+              example: "d41d8cd98f00b204e9800998ecf8427e"
+      responses:
+        '200':
+          description: "Device unregistered"
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/DeleteDeviceSchema'
+        '404':
+          description: "Device not found or invalid MAC"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceNotFoundSchema"
+      security:
+        - authenticated:
+            - read:devices
+  
+  /api/v1/devices/{mac}/wol:
+    post:
+      tags:
+        - devices
+      summary: Wake up a device
+      description: 'Sends the magic packet to wake up the device with the givan mac'
+      parameters:
+        - in: path
+          name: mac
+          description: "Mac address of a registered device to forget"
+          required: true
+          schema:
+            type: string
+            example: "16:43:a4:30:12:44" 
+        - in: header
+          name: X-Request-ID
+          required: true
+          description: "Authorization token retrieved via login"
+          content:
+            token:
+              example: "d41d8cd98f00b204e9800998ecf8427e"
+      responses:
+        '200':
+          description: "Magic packet sent"
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/WakeUpDeviceSchema'
+      security:
+        - authenticated:
+            - wakeup:devices
+            
+  /api/v1/system/info:
+    get:
+      tags:
+        - system
+      summary: Retrieve system info
+      description: 'Collects running system metrics as CPU and RAM usage'
+      parameters:
+        - in: header
+          name: X-Request-ID
+          required: true
+          description: "Authorization token retrieved via login"
+          content:
+            token:
+              example: "d41d8cd98f00b204e9800998ecf8427e"
+      responses:
+        '200':
+          description: "Magic packet sent"
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/SystemInfoSchema'
+      security:
+        - authenticated:
+            - read:system
+  
+components:
+  schemas:
+    BasicResponse:
+      type: object
+      properties:
+        error: 
+          type: string
+          example: null
+        data:
+          type: object
+    SuccessfulLoginResponse:
+      allOf: 
+      - $ref: '#/components/schemas/BasicResponse'
+      - type: object
+        properties:
+          data:
+            type: object
+            properties:
+              token:
+                title: token
+                example: "d41d8cd98f00b204e9800998ecf8427e"
+                description: "The token is a simple MD5 hash of a HMAC message. Due to limited computational power of this device, MD5 is the only HMAC alg implemented at the moment"
+    FailedLoginResponse:
+      allOf: 
+      - $ref: '#/components/schemas/BasicResponse'
+      - type: object
+        properties:
+          error:
+            type: string
+            example: "Invalid login"
+    
+    ListDevicesResponse:
+      allOf: 
+      - $ref: '#/components/schemas/BasicResponse'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: "#/components/schemas/Device"
+    
+    LoginRequestBody:
+      type: object
+      properties:
+        username:
+          type: string
+          format: string
+          example: admin
+        password:
+          type: string
+          format: string
+          example: 'mySecretPassword'
+    
+    AddDeviceRequestBody:
+      allOf: 
+      - $ref: "#/components/schemas/Device"
+    
+    AddDevicesResponse:
+      allOf: 
+      - $ref: '#/components/schemas/BasicResponse'
+      - type: object
+        properties:
+          data:
+            type: object
+            allOf:
+              - $ref: "#/components/schemas/Device"
+    
+    DeleteDeviceSchema:
+      allOf:
+      - $ref: '#/components/schemas/BasicResponse'
+      - type: object
+        properties:
+          data:
+            type: string
+            example: "Device deleted"
+            
+    WakeUpDeviceSchema:
+      allOf:
+      - $ref: '#/components/schemas/BasicResponse'
+      - type: object
+        properties:
+          data:
+            type: string
+            example: "Packet has been sent"
+            
+    SystemInfoSchema:
+      allOf:
+      - $ref: '#/components/schemas/BasicResponse'
+      - type: object
+        properties:
+          data:
+            type: object
+            properties:
+              memory:
+                type: object
+                properties:
+                  used:
+                    type: string
+                    example: "99440"
+                  free:
+                    type: string
+                    example: "18192"
+              network:
+                type: object
+                properties:
+                  ssid:
+                    type: string
+                    example: "webking's SSID"
+                  mac:
+                    type: string
+                    example: "16:43:a4:30:12:44"
+                  ip:
+                    type: string
+                    example: "192.168.21.2"
+                  netmask:
+                    type: string
+                    example: "255.255.255.0"
+                  gateway:
+                    type: string
+                    example: "192.168.21.1"
+                  dns:
+                    type: string
+                    example: "192.168.21.1"
+                  signalStrength:
+                    type: number
+                    example: -51
+              caller:
+                type: object
+                properties:
+                  ip: 
+                    type: string
+                    example: "192.168.21.2"
+                    
+            
+    DeviceNotFoundSchema:
+      allOf:
+      - $ref: '#/components/schemas/BasicResponse'
+      - type: object
+        properties:
+          data:
+            type: object
+            example: null
+          error:
+            type: string
+            example: "No device with that MAC is available"
+    
+    Device:
+      type: object
+      required: 
+        - name
+        - mac
+      properties:
+        name:
+          type: string
+        mac:
+          type: string
+        ip:
+          type: string
+      example: 
+        name: "Studio Desktop"
+        mac: "16:43:a4:30:12:44"
+        ip: "192.168.21.2"
+  
+  securitySchemes:
+    authenticated:
+      type: apiKey
+      name: wol-token
+      in: header
+
+      
+      
