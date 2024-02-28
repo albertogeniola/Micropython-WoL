@@ -133,3 +133,6 @@ dmypy.json
 # Ignore local configuration json
 config.json
 _config.json
+
+# Ignore Pymark conf file
+pymakr.conf

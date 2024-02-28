@@ -8,7 +8,7 @@ class BoardSetup:
     files = None
 
     def initialize(self, port):
-        self.board = Pyboard(device=port, wait=10)
+        self.board = Pyboard(device=port, wait=30)
         self.files = Files(pyboard=self.board)
     
     def reset(self, seconds=1.0, wait=True):
