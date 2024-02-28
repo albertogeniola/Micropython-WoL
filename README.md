@@ -159,6 +159,7 @@ To do so, simply access the Web-UI of the ESP32-WoL at `http://mywol` o `http://
 ## Advanced Topics
 ### API interactions
 It is possible to interact with ESP32-WOL via REST APIs. You can find the API Open Specs in the `docs/swagger.yaml` file within this repository.
+You can also test it directly via the nice swagger UI [from here](https://albertogeniola.github.io/ESP32-WoL/swagger).
 
 
 ### Hardware Setup
