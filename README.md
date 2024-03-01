@@ -1,5 +1,8 @@
 # ESP32 WOL: a tiny Wake-on-Lan delegate
 
+<img src="docs/images/case-3d/Front_PETG.jpg" height=300>
+<img src="docs/images/case-3d/Interior.jpg" height=300>
+
 ## What is ESP32-WOL?
 ESP32-WoL is a firmware, written for the Expressif ESP32 device in microptyhon,
 that turns the ESP32 device into a web-service to send wake-on-lan packets on 
@@ -8,9 +11,6 @@ your local network.
 This tool is suited for people who want to turn on their PC-devices via Wake-On-Lan,
 but cannot do that using their current home gateways or have no domotic/server device
 where to install such a service.
-
-<a href="docs/images/login.png"><img src="docs/images/login.png" width=300></a>
-<a href="docs/images/main.png"><img src="docs/images/main.png" width=300></a>
 
 ## Why ESP32?
 The ESP32 is a small, cheap, low-power and powerful micro-controller.
@@ -162,14 +162,25 @@ It is possible to interact with ESP32-WOL via REST APIs. You can find the API Op
 You can also test it directly via the nice swagger UI [from here](https://albertogeniola.github.io/ESP32-WoL/swagger).
 
 
+### 3D printable case
+This repository contains a STL model for 3D printing. 
+The model is designed for the `JZK ESP-WROOM-32 ESP-32` ([available here on Amazon](https://p-nt-www-amazon-it-kalias.amazon.it/gp/product/B071JR9WS9/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1)).
+
+The 3D printable model is designed to hold an oled display ssd1306 and has enough space for holding a small piezo-buzzer inside the case. 
+
+<a href="docs/images/case-3d/Front_PLA.jpg"><img src="docs/images/case-3d/Front_PLA.jpg" height=300></a>
+<a href="docs/images/case-3d/Composizione.png"><img src="docs/images/case-3d/Composizione.png" height=300></a>
+<a href="docs/images/case-3d/colored.png"><img src="docs/images/case-3d/colored.png" height=300></a>
+
+You can find the 3D printable files on [ThingVerse](https://www.thingiverse.com/thing:6511323).
+
+
 ### Hardware Setup
 TODO
 
 ### Configure wifi via config.json
 TODO
 
-### 3D printable case
-TODO
-
 ## Some Screenshots
-TODO
+<a href="docs/images/login.png"><img src="docs/images/login.png" width=300></a>
+<a href="docs/images/main.png"><img src="docs/images/main.png" width=300></a>
