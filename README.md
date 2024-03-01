@@ -1,7 +1,6 @@
 # ESP32 WOL: a tiny Wake-on-Lan delegate
 
-<img src="docs/images/case-3d/Front_PETG.jpg" height=300>
-<img src="docs/images/case-3d/Interior.jpg" height=300>
+<img src="docs/images/case-3d/Front_PETG.jpg" height=300> <img src="docs/images/case-3d/Interior.jpg" height=300>
 
 ## What is ESP32-WOL?
 ESP32-WoL is a firmware, written for the Expressif ESP32 device in microptyhon,
