@@ -1,6 +1,6 @@
 # ESP32 WOL: a tiny Wake-on-Lan delegate
 
-<img src="docs/images/case-3d/Front_PETG.jpg" height=300> <img src="docs/images/case-3d/Interior.jpg" height=300>
+<img src="docs/images/case-3d/front_orange.jpg" height=300> <img src="docs/images/case-3d/interior.jpg" height=300>
 
 ## What is ESP32-WOL?
 ESP32-WoL is a firmware, written for the Expressif ESP32 device in microptyhon,
@@ -167,8 +167,8 @@ The model is designed for the `JZK ESP-WROOM-32 ESP-32` ([available here on Amaz
 
 The 3D printable model is designed to hold an oled display ssd1306 and has enough space for holding a small piezo-buzzer inside the case. 
 
-<a href="docs/images/case-3d/Front_PLA.jpg"><img src="docs/images/case-3d/Front_PLA.jpg" height=300></a>
-<a href="docs/images/case-3d/Composizione.png"><img src="docs/images/case-3d/Composizione.png" height=300></a>
+<a href="docs/images/case-3d/front_green.jpg"><img src="docs/images/case-3d/front_green.jpg" height=300></a>
+<a href="docs/images/case-3d/composition.png"><img src="docs/images/case-3d/composition.png" height=300></a>
 <a href="docs/images/case-3d/colored.png"><img src="docs/images/case-3d/colored.png" height=300></a>
 
 You can find the 3D printable files on [ThingVerse](https://www.thingiverse.com/thing:6511323).
