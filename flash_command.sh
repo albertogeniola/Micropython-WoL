@@ -1,0 +1,1 @@
+python -m esptool -p COM5 -b 460800 --before default_reset --after hard_reset --chip esp32 --no-stub write_flash --flash_mode dio --flash_size 4MB --flash_freq 80m 0x0 built/build-ESP32_GENERIC/bootloader/bootloader.bin 0x8000 built/build-ESP32_GENERIC/partition_table/partition-table.bin 0x10000 built/build-ESP32_GENERIC/firmware.bin

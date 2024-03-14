@@ -1,0 +1,2 @@
+rem docker run --rm --entrypoint "/bin/bash" -v "C:\Users\Alberto Geniola\source\repos\ESP32-WoL\src":/mnt/source -v "C:\Users\Alberto Geniola\source\repos\ESP32-WoL\built":/mnt/built -it test
+docker run --rm -v "C:\Users\Alberto Geniola\source\repos\ESP32-WoL\src":/mnt/source -v "C:\Users\Alberto Geniola\source\repos\ESP32-WoL\built":/mnt/built -it esp32builder

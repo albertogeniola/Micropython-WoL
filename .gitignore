@@ -136,3 +136,6 @@ _config.json
 
 # Ignore Pymark conf file
 pymakr.conf
+
+# built firmware
+built
