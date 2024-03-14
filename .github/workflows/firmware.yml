@@ -37,14 +37,14 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           github-token: ${{ secrets.GITHUB_TOKEN }}
-  build:
-    needs: build-docker-builder
-    runs-on: ubuntu-latest
-    container:
-      image: ${{ env.REGISTRY }}/${{ env.REPO_OWNER }}/${{ env.PACKAGE_NAME }}
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-      volumes:
-        - ./src:/mnt/source
-        - ./built:/mnt/built
+  # build:
+  #   needs: build-docker-builder
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: ${{ env.REGISTRY }}/${{ env.REPO_OWNER }}/${{ env.PACKAGE_NAME }}
+  #     credentials:
+  #       username: ${{ github.actor }}
+  #       password: ${{ secrets.GITHUB_TOKEN }}
+  #     volumes:
+  #       - ./src:/mnt/source
+  #       - ./built:/mnt/built
