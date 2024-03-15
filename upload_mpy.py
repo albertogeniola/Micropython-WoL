@@ -38,6 +38,7 @@ def upload():
 def minify():
     os.chdir("src")
     for curdir, dirs, lfiles in os.walk(".", topdown=True):
+        print(f"CURDIR: {curdir}")
         rdir = os.path.join("..",_DIST,curdir.lstrip(".\\").replace("\\", "/"))
         if os.path.basename(curdir) == "__pycache__":
             continue
@@ -60,7 +61,6 @@ def minify():
                     minified = minify_html.minify(i.read(), minify_js=True, minify_css=True, remove_processing_instructions=True)
                     with open(target_path, "w") as o:
                         o.write(minified)
-
     os.chdir("..")
 
 
@@ -75,7 +75,6 @@ def prepare():
     minify()
 
     # copy the boot.py & hw.json
-    print("Uploading boot.py, main.py and hw.json")
     shutil.copyfile("src/boot.py", os.path.join(_DIST, "boot.py"))
     shutil.copyfile("src/main.py", os.path.join(_DIST, "main.py"))
     
