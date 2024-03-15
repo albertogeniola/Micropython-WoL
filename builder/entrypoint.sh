@@ -33,8 +33,4 @@ cp -r build-ESP32_GENERIC_S2 $MODULE_OUTPUT_PATH
 make BOARD=ESP32_GENERIC_C3
 cp -r build-ESP32_GENERIC_C3 $MODULE_OUTPUT_PATH
 
-#make ports/esp32 BOARD=ESP32_GENERIC_C3
 popd
-
-# Copy the submodules before building
-# TODO: prepare the artifacts
