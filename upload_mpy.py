@@ -35,7 +35,7 @@ def upload():
                 _board.files.put(rdir + "/" + f, bf.read())
 
 
-def minify():
+def compile_and_minify(compile=True, minify=True):
     os.chdir("src")
     for curdir, dirs, lfiles in os.walk(".", topdown=True):
         print(f"CURDIR: {curdir}")
@@ -50,13 +50,13 @@ def minify():
             target_path =  os.path.abspath(os.path.join(rdir,f))
 
             # If we are handling a python file, compile it.
-            if local_path.endswith(".py") and not local_path.endswith("boot.py") and not local_path.endswith("main.py"):
+            if compile and (local_path.endswith(".py") and not local_path.endswith("boot.py") and not local_path.endswith("main.py")):
                 target_path = target_path.replace(".py", ".mpy")
                 print(f"Pre-compiling \"{local_path}\" to \"{target_path}\"")
                 mpy_cross.run("-o", target_path, local_path)
                 continue
             
-            if local_path.endswith(".css") or local_path.endswith(".html") or local_path.endswith(".js"):
+            if minify and (local_path.endswith(".css") or local_path.endswith(".html") or local_path.endswith(".js")):
                 with open(local_path, "r") as i:
                     minified = minify_html.minify(i.read(), minify_js=True, minify_css=True, remove_processing_instructions=True)
                     with open(target_path, "w") as o:
@@ -72,7 +72,7 @@ def prepare():
     os.makedirs(_DIST)
 
     # precompile and minify
-    minify()
+    compile_and_minify()
 
     # copy the boot.py & hw.json
     shutil.copyfile("src/boot.py", os.path.join(_DIST, "boot.py"))
