@@ -1,5 +1,5 @@
 name: Build Firmware
-run-name: Build ESP32 Firmware images
+run-name: Builder Docker Builder image
 env:
   REGISTRY: ghcr.io
   REPO_OWNER: ${{ github.repository_owner }}
