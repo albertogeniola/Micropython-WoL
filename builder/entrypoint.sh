@@ -15,7 +15,7 @@ git clone https://github.com/micropython/micropython && \
 . /opt/esp-idf/export.sh
 
 # Copy the submodules before building
-cp -r $MODULE_SOURCE_PATH/*.mpy /tmp/micropython/ports/esp32/modules
+cp -r $MODULE_SOURCE_PATH/*.py /tmp/micropython/ports/esp32/modules
 
 # Build the ESP32_GENERIC port
 # Clean the build directory
