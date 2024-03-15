@@ -62,13 +62,8 @@ def minify():
 
     os.chdir("..")
 
-def main():
-    # Check args
-    if len(sys.argv) != 2:
-        print("Missing required argument: Serial PORT")
-        exit(1)
-    port = sys.argv[1]
 
+def prepare():
     # Prepare the DIST folder
     if os.path.isdir(_DIST):
         print(f"Removing {_DIST}")
@@ -88,6 +83,17 @@ def main():
 
     if os.path.isfile("config.json"):
         shutil.copyfile("config.json", os.path.join(_DIST, "config.json"))
+
+
+def main():
+    # Check args
+    if len(sys.argv) != 2:
+        print("Missing required argument: Serial PORT")
+        exit(1)
+    port = sys.argv[1]
+
+    # Prepare files to be flashed
+    prepare()
 
     # Initialize device configuration
     _board.initialize(port)
