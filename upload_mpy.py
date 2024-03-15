@@ -25,7 +25,7 @@ def upload():
     os.chdir(_DIST)
     for curdir, dirs, lfiles in os.walk(".", topdown=True):
         print(f"Handling folder: {curdir}")
-        rdir = curdir.lstrip(".\\").replace("\\", "/")
+        rdir = curdir.lstrip("./").lstrip(".\\").replace("\\", "/")
         if curdir != ".":
             _board.files.mkdir(rdir, exists_okay=True)
         for f in lfiles:
@@ -39,7 +39,7 @@ def minify():
     os.chdir("src")
     for curdir, dirs, lfiles in os.walk(".", topdown=True):
         print(f"CURDIR: {curdir}")
-        rdir = os.path.join("..",_DIST,curdir.lstrip(".\\").replace("\\", "/"))
+        rdir = os.path.join("..",_DIST,curdir.lstrip("./").lstrip(".\\").replace("\\", "/"))
         if os.path.basename(curdir) == "__pycache__":
             continue
         if curdir != ".":
