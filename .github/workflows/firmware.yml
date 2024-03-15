@@ -4,10 +4,12 @@ env:
   REGISTRY: ghcr.io
   REPO_OWNER: ${{ github.repository_owner }}
   PACKAGE_NAME: esp32wol_builder
-on: [push]
+on: 
+  push:
+    paths-ignore:
+      - 'builder/**'
 jobs:
   build:
-    needs: build-docker-builder
     runs-on: ubuntu-latest
     permissions:
       packages: read
