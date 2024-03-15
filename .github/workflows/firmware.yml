@@ -40,6 +40,8 @@ jobs:
   build:
     needs: build-docker-builder
     runs-on: ubuntu-latest
+    permissions:
+      packages: read
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -62,6 +64,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build firmware
         run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.REPO_OWNER }}/${{ env.PACKAGE_NAME }}
           docker run --rm -v "$(pwd)/.dist":/mnt/source -v "$(pwd)/built":/mnt/built ${{ env.REGISTRY }}/${{ env.REPO_OWNER }}/${{ env.PACKAGE_NAME }}
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
