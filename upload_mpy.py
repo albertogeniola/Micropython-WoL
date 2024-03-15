@@ -42,6 +42,7 @@ def minify():
         if os.path.basename(curdir) == "__pycache__":
             continue
         if curdir != ".":
+            print(f"MKDIR: {os.path.join(rdir)}")
             os.makedirs(os.path.join(rdir),exist_ok=True)
         for f in lfiles:
             local_path = os.path.abspath(os.path.join(curdir, f))
