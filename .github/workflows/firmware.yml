@@ -30,8 +30,8 @@ jobs:
           cp -R src/*.py .dist/
       - name: Prepare dist files
         run: python -c "import upload_mpy; upload_mpy.minify()"
-      - name: Bundle static files
-        run: python -m freezefs src/static .dist/frozen_static.py
+      #- name: Bundle static files
+      #  run: python -m freezefs src/static .dist/frozen_static.py
       - name: Login to docker registry
         uses: docker/login-action@v3
         with:
