@@ -51,7 +51,7 @@ jobs:
       - name: Install requirements
         run: pip install -r requirements.txt
       - name: Prepare dist files
-        run: python -c 'import upload_mpy; print upload_mpy.prepare()'
+        run: python -c 'import upload_mpy; upload_mpy.prepare()'
       - name: Bundle static files
         run: python -m freezefs src/static .dist/frozen_static.py
       - name: Login to docker registry
