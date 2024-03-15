@@ -46,7 +46,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Firmware
-          path: \
+          path: |
             ./built/*/micropython.bin
             ./built/*/bootloader/bootloader.bin
             ./built/*/partition_table/partition-table.bin
