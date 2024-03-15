@@ -1,5 +1,5 @@
 adafruit-ampy
 minify-html
 esptool
-mypy-cross
+mpy-cross
 freezefs
