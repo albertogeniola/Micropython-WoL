@@ -30,8 +30,8 @@ jobs:
           cp -R src/*.py .dist/
       - name: Prepare dist files
         run: python -c "import upload_mpy; upload_mpy.compile_and_minify(compile=False)"
-      #- name: Bundle static files
-      #  run: python -m freezefs .dist/static .dist/frozen_static.py
+      - name: Bundle static files
+        run: python -m freezefs .dist/static .dist/frozen_static.py
       - name: Login to docker registry
         uses: docker/login-action@v3
         with:
@@ -46,10 +46,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Firmware
-          path: ./built
-          # path: |
-          #   ./built/*/micropython.bin
-          #   ./built/*/bootloader/bootloader.bin
-          #   ./built/*/partition_table/partition-table.bin
+          #path: ./built
+          path: |
+            ./built/*/firmware.bin
+            ./built/*/micropython.bin
+            ./built/*/bootloader/bootloader.bin
+            ./built/*/partition_table/partition-table.bin
           if-no-files-found: error
           retention-days: 10
