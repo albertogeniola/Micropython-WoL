@@ -7,7 +7,7 @@ ENV MP_TAG=v1.22.2
 ENV IDF_VER=v5.0.4
 
 # Install base env
-RUN apt-get update && apt-get install -y build-essential libffi-dev git pkg-config wget python3 python3-dev python3-pip python3-venv cmake libusb-1.0-0-dev autoconf automake libtool gcc g++ gperf flex bison texinfo gawk ncurses-dev libexpat-dev python3-serial sed unzip help2man bzip2 libtool-bin
+RUN apt-get update && apt-get install -y build-essential libffi-dev git pkg-config wget python3 python3-dev python3-pip python3-venv cmake libusb-1.0-0-dev autoconf automake libtool gcc g++ gperf flex bison texinfo gawk ncurses-dev libexpat-dev python3-serial sed unzip help2man bzip2 libtool-bin bash unrar-free
 
 # Install necessary libs for building ESP32
 WORKDIR /opt
