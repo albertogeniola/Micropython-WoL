@@ -1,4 +1,4 @@
-name: Build Firmware
+name: Build Builder
 run-name: Builder Docker Builder image
 env:
   REGISTRY: ghcr.io
