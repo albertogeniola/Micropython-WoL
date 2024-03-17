@@ -35,9 +35,16 @@ cp -r build-ESP32_GENERIC_C3 $MODULE_OUTPUT_PATH
 popd
 
 # Build the ESP8266 port
+export PATH=$PATH:/opt/xtensa-lx106-elf/bin
 cp -r $MODULE_SOURCE_PATH/*.py /tmp/micropython/ports/esp8266/modules
+pushd /tmp/micropython
+make -C mpy-cross
+make -C ports/esp8266 submodules
+make -C ports/esp8266 BOARD=ESP8266_GENERIC
+#make -C ports/esp8266 BOARD=ESP8266_GENERIC BOARD_VARIANT=FLASH_512K
+#make -C ports/esp8266 BOARD=ESP8266_GENERIC BOARD_VARIANT=FLASH_1M
 make submodules
-
-make BOARD=ESP8266_GENERIC
-cp -r build-ESP8266_GENERIC $MODULE_OUTPUT_PATH
+cp -r ports/esp8266/build-ESP8266_GENERIC $MODULE_OUTPUT_PATH
+#cp -r ports/esp8266/build-ESP8266_GENERIC $MODULE_OUTPUT_PATH
+#cp -r ports/esp8266/build-ESP8266_GENERIC $MODULE_OUTPUT_PATH
 popd
