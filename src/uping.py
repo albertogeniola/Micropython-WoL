@@ -26,7 +26,11 @@ def ping(host, count=4, timeout=5000, interval=10, quiet=False, size=64):
     import uctypes
     import usocket
     import ustruct
-    import urandom
+    try:
+        from urandom import randint
+    except:
+        from myurandom import randint
+    
 
     # prepare packet
     assert size >= 16, "pkt size too small"
@@ -43,7 +47,7 @@ def ping(host, count=4, timeout=5000, interval=10, quiet=False, size=64):
     h.type = 8 # ICMP_ECHO_REQUEST
     h.code = 0
     h.checksum = 0
-    h.id = urandom.randint(0, 65535)
+    h.id = randint(0, 65535)
     h.seq = 1
 
     # init socket
