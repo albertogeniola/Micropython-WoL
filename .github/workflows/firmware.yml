@@ -1,5 +1,5 @@
 name: Build Firmware
-run-name: Build ESP32 Firmware images
+run-name: Build firmware images
 env:
   REGISTRY: ghcr.io
   REPO_OWNER: ${{ github.repository_owner }}
@@ -48,9 +48,7 @@ jobs:
           name: Firmware
           #path: ./built
           path: |
-            ./built/*/firmware.bin
-            ./built/*/micropython.bin
-            ./built/*/bootloader/bootloader.bin
-            ./built/*/partition_table/partition-table.bin
+            ./built/build-ESP8266_*/firmware.bin
+            ./built/build-ESP32_*/micropython.bin
           if-no-files-found: error
           retention-days: 10
