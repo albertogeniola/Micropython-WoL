@@ -7,9 +7,28 @@ from futils import attempt_load_file
 
 _KEYS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890'
 
+def _randrange(start, stop=None):
+    if stop is None:
+        stop = start
+        start = 0
+    upper = stop - start
+    bits = 0
+    pwr2 = 1
+    while upper > pwr2:
+        pwr2 <<= 1
+        bits += 1
+    while True:
+        r = urandom.getrandbits(bits)
+        if r < upper:
+            break
+    return r + start
+
+
+def _choice(x):
+    return x[_randrange(0, len(x))]
 
 def _generate_secret(length=32):
-    return ''.join((urandom.choice(_KEYS) for _ in range(length)))
+    return ''.join((_choice(_KEYS) for _ in range(length)))
 
 
 class Configuration:
