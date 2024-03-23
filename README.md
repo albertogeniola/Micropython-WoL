@@ -65,15 +65,19 @@ The firmware flash procedure is the following:
 
     For the ESP8266, run the following
     ```bash
+    python -m esptool --chip esp8266 erase_flash
     python -m esptool --chip esp8266 --port SERIAL_PORT write_flash --flash_mode dio --flash_size detect 0x0 path/to/downloaded/firmware.bin
     ```
 
     For the ESP32, run the following
     ```bash
+    python -m esptool --chip esp8266 esp32
     python -m esptool -p SERIAL_PORT -b 460800 --chip esp32 write_flash 0x10000 path/to/downloaded/micropython.bin
     ```
 
-    > Note: replace **SERIAL_PORT** with the name of the serial port where the device is connected (e.g. COM5). Also, remember to update the firmware path parameter so that it points to the downloaded firmware.
+> Note: replace **SERIAL_PORT** with the name of the serial port where the device is connected (e.g. COM5). Also, remember to update the firmware path parameter so that it points to the downloaded firmware.
+
+> Note: run the flash command just after connecting the USB cable to the microcontroller, or make sure to press the FLASH button on the controller to enable download more.
 
 ### Option B: Install by manual update
 This installation method is the most general one, but requires you to install the latest micropython firmware on your own, and then upload the python source files directly into the controller.
