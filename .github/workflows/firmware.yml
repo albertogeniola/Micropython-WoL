@@ -6,6 +6,8 @@ env:
   PACKAGE_NAME: esp32wol_builder
 on: 
   push:
+    tags: 'v*'
+    branches: '*'
     paths-ignore:
       - 'builder/**'
 jobs:
@@ -52,3 +54,20 @@ jobs:
             ./built/build-ESP32_*/micropython.bin
           if-no-files-found: error
           retention-days: 10
+  release:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Firmware
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
