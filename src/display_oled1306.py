@@ -173,6 +173,7 @@ class I2C1306(Display):
         i2c = I2C(sda=Pin(kwargs.get("sda_pin")), scl=Pin(kwargs.get("scl_pin")))
         self._display = SSD1306_I2C(128, 64, i2c)
         self._animation_step = 0
+        self._scroll_timer = None
 
     def _draw_unconfigured(self):
         super()._draw_unconfigured()
@@ -193,7 +194,7 @@ class I2C1306(Display):
         self._display.text('----------------', 0, 8, 1)
         self._display.text(ssid_line, 0, 16, 1)
         self._display.text(self._ip, 0, 24, 1)
-        if len(ssid_line) > 15:
+        if len(ssid_line) > 15 and self._scroll_timer is None:
             self._cursor = 0
             self._ssid_line = ssid_line
             self._scroll_timer = Timer(_DISPLAY_TIMER)
