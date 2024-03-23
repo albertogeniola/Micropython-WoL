@@ -108,9 +108,15 @@ async def wol(request, mac):
     # Note: we don't explicitly check for a stored device with that mac. We allow to wake up any MAC.
     dev = _dev_registry.get_devices().get(mac)
     dev_name =  dev.name if dev is not None else "Unknown"
+
+    # Calculate the broadcast address where to send the magic packet
+    nic = network.WLAN(network.STA_IF)
+    ip, netmask, gateway, dns = nic.ifconfig()
+    broadcast_ip=magic_packet.calculate_broadcast(ip=ip, netmask=netmask)
+
     hw.display.notify_wol(mac, dev_name)
     hw.buzzer.beep(long=True)
-    magic_packet.send_magic_packet(mac, ip_address=BROADCAST_IP, port=9)
+    magic_packet.send_magic_packet(mac, ip_address=broadcast_ip, port=9)
     encoded = make_json_response("Packet has been sent")
     return encoded
 

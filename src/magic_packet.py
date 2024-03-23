@@ -5,7 +5,20 @@ import ubinascii
 SOF_BROADCAST = 0x20
 
 
-def create_magic_packet(macaddress: str) -> bytes:
+def calculate_broadcast(ip, netmask) -> str:
+    # Take the netmask, invert it and put it in OR with IP
+    net_octects = netmask.split(".")
+    ip_octects = ip.split(".")
+    if len(net_octects) != 4 or len(ip_octects) != 4:
+        raise ValueError("Invalid ip/mask specified")
+    new_mask = []
+    for i in range(4):
+        octet = 255-int(net_octects[i])
+        new_mask.append(octet | int(ip_octects[i]))
+    return ".".join([str(x) for x in new_mask])
+
+
+def _create_magic_packet(macaddress: str) -> bytes:
     if len(macaddress) == 17:
         sep = macaddress[2]
         macaddress = macaddress.replace(sep, "")
@@ -18,7 +31,7 @@ def create_magic_packet(macaddress: str) -> bytes:
 def send_magic_packet(
     *macs: str, ip_address: str, port: int, interface: str = None
 ) -> None:
-    packets = [create_magic_packet(mac) for mac in macs]
+    packets = [_create_magic_packet(mac) for mac in macs]
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     if interface is not None:
