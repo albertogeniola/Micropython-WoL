@@ -1,24 +1,24 @@
-# ESP32 WOL: a tiny Wake-on-Lan delegate
+# Micropython WOL: a tiny Wake-on-Lan delegate
 
 <img src="docs/images/case-3d/front_orange.jpg" height=300> <img src="docs/images/case-3d/interior.jpg" height=300>
 
-## What is ESP32-WOL?
-ESP32-WoL is a firmware, written for the Expressif ESP32 device in microptyhon,
-that turns the ESP32 device into a web-service to send wake-on-lan packets on 
-your local network.
+## What is Micropython-WOL?
+Micropython-WoL is a firmware that enables Wake-on-lan functionality on tiny microcontrollers. This utility is written in python and runs on top of microptyhon. 
+
+So far, this utility is compatible with the Expressif ESP32 and the ESP8266 devices.
 
 This tool is suited for people who want to turn on their PC-devices via Wake-On-Lan,
 but cannot do that using their current home gateways or have no domotic/server device
 where to install such a service.
 
-## Why ESP32?
-The ESP32 is a small, cheap, low-power and powerful micro-controller.
-This project turns that tiny chip into a Wake-On-Lan service provider 
+## Why ESP32/8266?
+Both devices are a small, cheap, low-power and powerful.
+This project turns those tiny chips into Wake-On-Lan service providers 
 exposed via a self-hosted web-ui, which can be reached from all-over the internet. 
 
 Of course, you might use other devices/servers to do the same thing.
 But, if you don't have any, and you just need a small, power-efficient device to 
-turn on you other devices on the network, the ESP32-WoL is what you are looking for.
+turn on you other devices on the network, the Micropython-WoL is what you are looking for.
 
 Let's have a look at some possible alternatives in the following table.
 
@@ -29,55 +29,72 @@ Let's have a look at some possible alternatives in the following table.
 | Occupied space      | 2 coins size | Credit card size  |   Mini ITX+ |
 | Installation effort | Minimum      |      Medium       |        High |
 
-As you can see, the ESP32-WoL is way cheaper than the HomeAssistant solution, smaller and 
-less power hungry. However, it is not as general purpose as HomeAssistant or as full featured
-home server. Therefore, here's the advice: **rely on the ESP32-WoL when you don't have an 
-always-on Raspberry running HA nor home-server or if you need to wake-up devices over multiple
-VLANs/subnets**. 
+In general, if you already have a home-server or a HomeAssistant device in your LAN,
+then you probably don't need this firmware. 
+However, there might be various cases in which this utility comes handy.
+For instance, I needed to run WoL packets into different VLANs: my HomeAssistant device was 
+not able to reach all the subnets segments (and the router correctly forbid magic packet broadcast across vlans). Thus, I've decided to implement this utility.
 
-In my specific case, I needed to run WoL packets into different subnets, and I had my HomeAssistant device into another subnet. 
+## Compatible Devices
 
-## Installation instructions
-In order to install ESP32-WoL firmware, you should apply the following procedure.
+I've tested the following devices:
+- ESP8266 NodeMCU (CP2102)
+- ESP32-WROOM
 
-1. Flash micropython firmware to your ESP32 device
-2. Install this program on the ESP32
-3. Configure the ESP32-WoL
-4. Configure your router to allow internet traffic to the ESP32-WoL
-5. Add WoL devices
+More micropython-enabled microcontrollers might be supported, but I haven't explicitly tested them.
 
-### 1. Flashing micropython firmware
-This step is only required if you ESP32 device is not yet flashed with a micropython firmware.
-[Here](https://micropython.org/download/esp32/) and [here](https://docs.micropython.org/en/latest/esp32/tutorial/intro.html#deploying-the-firmware) 
+## Flash instructions
+
+The Micropython-WoL can be installed in two ways:
+- Flashing a pre-compiled firmware **(recommended!)**
+- Flashing the python source on the device
+
+### Option A: Install by flashing the firmware
+This method is the recommended way of flashing the firmware utility, but only supports a limited
+number of hardware microcontrollers: ESP8266_GENERIC, ESP32_GENERIC_S2, ESP32_GENERIC_C3.
+
+The firmware flash procedure is the following:
+
+1. Download the latest firmware from the [release section of this repository](https://github.com/albertogeniola/Micropython-WoL/releases) or just [grab the latest](https://github.com/albertogeniola/Micropython-WoL/releases/latest).
+2. Ensure you have the right OS serial port-drivers installed for your device (e.g. [CP210X](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers), [CH340](https://learn.sparkfun.com/tutorials/how-to-install-ch340-drivers/all), etc)
+3. Ensure you have a valid python interpreter on your system and install esptool via the following command
+    ```bash
+    python -m pip install esptool
+    ```
+4. Run the appropriate flash command, based on your device.
+
+    For the ESP8266, run the following
+    ```bash
+    python -m esptool --chip esp8266 --port SERIAL_PORT write_flash --flash_mode dio --flash_size detect 0x0 path/to/downloaded/firmware.bin
+    ```
+
+    For the ESP32, run the following
+    ```bash
+    python -m esptool -p SERIAL_PORT -b 460800 --chip esp32 write_flash 0x10000 path/to/downloaded/micropython.bin
+    ```
+
+    > Note: replace **SERIAL_PORT** with the name of the serial port where the device is connected (e.g. COM5). Also, remember to update the firmware path parameter so that it points to the downloaded firmware.
+
+### Option B: Install by manual update
+This installation method is the most general one, but requires you to install the latest micropython firmware on your own, and then upload the python source files directly into the controller.
+
+Before proceeding with the installation, ensure you have flashed your microcontroller with a micropython firmware. [Here](https://micropython.org/download/esp32/) and [here](https://docs.micropython.org/en/latest/esp32/tutorial/intro.html#deploying-the-firmware) 
 you find the official instructions to do so.
 
-For instance, to install the Micropython firmware on WROOM ESP32 device connected to port COM5, just download the latest image from the website above (at the time of writing is ESP32_GENERIC-20240105-v1.22.1.bin) and install as follows:
+Now, proceed as follows:
 
-```bash 
-python3 -m esptool esptool.py --port COM5 write_flash -z 0x1000 ESP32_GENERIC-20240105-v1.22.1.bin 
+- Download this repository
+```bash
+  git clone https://github.com/albertogeniola/Micropython-WoL
 ```
 
-Please note down the specific version of the firmware (in this case, `1.22.1`). You will need it later on.
-
-**Note: this tool has been tested only with v1.22.1 (2024-01-05) micropython firmware**. 
-There is no guarantee it is compatible with other firmware versions. 
-
-### 2. Install this software into the ESP32
-Once the ESP32 device is capable of running python software, you need to upload the python scripts into the device to turn it into a fully functional ESP32-WOL. 
-
-To do so, first download the repository source code.
-
+- Install python virtual env and dependencies
 ```bash
-git clone https://github.com/albertogeniola/ESP32-WoL.git
-```
-
-Then let's create a virtual-env and install the required package dependency to run our python upload script.
-
-```bash
-cd ESP32-WoL
-python3 -m venv .venv
-source .venv/bin/activate # or if you are on windows: .venv\Scripts\activate.bat
-pip install -r requirements.txt
+  cd Micropython-WoL
+  python -m pip install virtualenv
+  python -m venv .venv
+  .\.venv\Scripts\activate # Or "source .venv/bin/activate" if running on linux
+  python -m pip install -r requirements.txt
 ```
 
 After that, we need to install the cross-compilation library (mpy-cross).
@@ -90,6 +107,7 @@ python -m pip install mpy-cross==1.22.1
 Remember: if you using a different version of micropython, change the `1.22.1` parameter accordingly.
 
 At this point, we can now perform the program upload. To do so, disconnect your ESP32 device and run the following command. 
+
 Replace `_COM_PORT_NAME_OR_TTY_` with the serial port path/name of your ESP32 device. On Windows, they are usually `COMX` (where X is an integer); on Linux it is in the form of `/dev/ttyUSB0`
 
 ```bash
@@ -109,8 +127,8 @@ Waiting 30 seconds for pyboard ....
 
 When you are done, the onboard device led should start blinking slowly: that means the device entered the "installation mode". If that's the case, you can proceed with the next section. If the led does not blink, it probably means some error occurred during the upload or flash process. You should start over and make sure to follow every step again.
 
-### 3. Configure the ESP32-WoL
-At this stage, the ESP32 is flashed with micropython and it has been loaded with the necessary python files to run our Web service. We can now run the configuration wizard.
+## Configuration instructions
+At this stage, the microptyhon-wol is ready to be configured! 
 
 The first step is to use your laptop or smartphone to connect to the Access Point named "ESP_WOL" that the ESP32 sets up when it is in installation mode. Connect to that WIFI using the the following password: `espwol123`.
 
@@ -137,7 +155,7 @@ On the contrary, if the ESP32 correctly connects to the target WiFi,
 the onboard led will turn to FIXED-ON. When this happens, the web-ui should automatically redirect you to the ESP32-WoL web-administration page. If that does not happen, you can reach it by typing `http://<target_ip>` where `target_ip` is the IP address that the ESP32 device has been assigned via DHCP or has bound statically.
 The ESP32_WOL will advertise its IP via bluetooth le. You can use the `BLE Scanner` android app to get this info: you jus need to launch the APP and scan for BLE device. You'll see an entry named `ESP32-WoL <IP_ADDRESS>`.
 
-### 4. Allow internet access to ESP32-WoL
+### Allow internet access to ESP32-WoL
 In order to be functional to its original objective, the ESP32-WoL should be accessible
 from internet. This means that you should:
 - Make sure the ESP32 always gets the same IP on the LAN
@@ -146,7 +164,7 @@ from internet. This means that you should:
 
 Specific instructions on how to achieve such configuration objectives are out of the scope of this document, as every cpe/router device might differ. The internet is full of tutorials on how to do so, though. Just google for your router model and "how to port forward" o "how to static DHCP lease" and you should find some nice tutorial to help you out.
 
-### 5. Add WoL devices
+### Add WoL devices
 If you made up to this stage, congratulations: you are done. 
 It is now time to register the LAN devices you would like to wake up via the ESP32-WoL, so that you don't need to remember their MAC address by memory.
 
