@@ -79,17 +79,19 @@ jobs:
       matrix:
         DEVICE_FAMILY: ["ESP8266","ESP32"]
     steps:
-      - name: Donwload Artifacts
+      - name: Donwload Artifact
         id: download-artifacts
         uses: actions/download-artifact@v4
         with:
           name: Firmware
-      - name: Zip Artifacts
+      - name: Zip Artifact
+        id: zip-artifact
         run: |
-          ls -l "${{steps.download-artifacts.outputs.download-path}}/build-${{matrix.DEVICE_FAMILY}}*"
           ls -l "${{steps.download-artifacts.outputs.download-path}}"
-          ls -l "."
-          zip -r "${{matrix.DEVICE_FAMILY}}.zip" . -i "${{steps.download-artifacts.outputs.download-path}}/build-${{matrix.DEVICE_FAMILY}}*"
+          unzip "${{steps.download-artifacts.outputs.download-path}}/Firmware.zip"
+          ls -l "${{steps.download-artifacts.outputs.download-path}}/Firmware/build-${{matrix.DEVICE_FAMILY}}*"
+          zip -r "${{matrix.DEVICE_FAMILY}}.zip" "${{steps.download-artifacts.outputs.download-path}}/Firmware/build-${{matrix.DEVICE_FAMILY}}*
+          echo "ARTIFACT_ZIP=${{matrix.DEVICE_FAMILY}}.zip" >> "$GITHUB_OUTPUT"
       - name: Upload Release Asset
         id: upload-release-asset 
         uses: actions/upload-release-asset@v1
@@ -97,6 +99,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.release.outputs.release_url }}
-          asset_path: "${{matrix.DEVICE_FAMILY}}.zip"
+          asset_path: ${{steps.zip-artifact.outputs.ARTIFACT_ZIP}}
           asset_name: "${{matrix.DEVICE_FAMILY}}.zip"
           asset_content_type: application/zip
