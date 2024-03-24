@@ -1,7 +1,7 @@
 import gc
 
 import magic_packet
-import uping
+#import uping
 from configuration import _configuration
 from constants import BROADCAST_IP
 from device import _dev_registry
@@ -125,9 +125,10 @@ async def wol(request, mac):
 def ping(request, ip):
     gc.collect()
     check_auth_token(request)
-    transmitted, received = uping.ping(host=ip, count=1, timeout=1000, quiet=True)
-    encoded = make_json_response(transmitted == received)
-    return encoded
+    #transmitted, received = uping.ping(host=ip, count=1, timeout=1000, quiet=True)
+    #encoded = make_json_response(transmitted == received)
+    #return encoded
+    return make_json_response(False)
 
 
 @app.route("/api/v1/system/info", methods=["GET"])
