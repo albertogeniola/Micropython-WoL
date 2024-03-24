@@ -55,6 +55,7 @@ jobs:
           if-no-files-found: error
           retention-days: 10
   release:
+    needs: build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
