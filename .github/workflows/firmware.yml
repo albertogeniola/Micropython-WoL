@@ -48,7 +48,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Firmware
-          #path: ./built
           path: |
             ./built/build-ESP8266_*/firmware.bin
             ./built/build-ESP32_*/micropython.bin
@@ -58,8 +57,13 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
+    strategy:
+      matrix:
+        DEVICE_FAMILY: ["ESP8266","ESP32"]
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Donwload Artifacts
+        id: download-artifacts
+        uses: actions/download-artifact@v4
         with:
           name: Firmware
       - name: Create Release
@@ -72,3 +76,16 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
+      - name: Zip Artifacts
+        run: zip -r "${{matrix.DEVICE_FAMILY}}.zip" "${{steps.download-artifacts.outputs.download-path}}/build-${{matrix.DEVICE_FAMILY}}*"
+      - name: Upload Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: "${{matrix.DEVICE_FAMILY}}.zip"
+          asset_name: "${{matrix.DEVICE_FAMILY}}.zip"
+          asset_content_type: application/zip
+
