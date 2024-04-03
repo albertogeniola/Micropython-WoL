@@ -24,7 +24,7 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
       - name: Install requirements
-        run: pip install -r requirements.txt
+        run: pip install -r requirements-dev.txt
       - name: Bundle python files
         run: |
           rm -R -f .dist
