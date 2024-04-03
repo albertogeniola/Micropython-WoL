@@ -1,0 +1,5 @@
+adafruit-ampy
+minify-html
+esptool
+mpy-cross
+freezefs

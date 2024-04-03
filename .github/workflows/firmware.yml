@@ -6,7 +6,7 @@ env:
   PACKAGE_NAME: esp32wol_builder
 on: 
   push:
-    tags: 'v*'
+    #tags: 'v*'
     branches: '**'
     paths-ignore:
       - 'builder/**'
@@ -49,8 +49,8 @@ jobs:
         with:
           name: Firmware
           path: |
-            ./built/build-ESP8266_*/firmware.bin
-            ./built/build-ESP32_*/micropython.bin
+            ./built/build-*/firmware.bin
+            ./built/build-*/micropython.bin
           if-no-files-found: error
           retention-days: 10
   release:
@@ -87,10 +87,10 @@ jobs:
       - name: Zip Artifact
         id: zip-artifact
         run: |
+          tree .
           ls -l "${{steps.download-artifacts.outputs.download-path}}"
-          unzip "${{steps.download-artifacts.outputs.download-path}}/Firmware.zip"
-          ls -l "${{steps.download-artifacts.outputs.download-path}}/Firmware/build-${{matrix.DEVICE_FAMILY}}*"
-          zip -r "${{matrix.DEVICE_FAMILY}}.zip" "${{steps.download-artifacts.outputs.download-path}}/Firmware/build-${{matrix.DEVICE_FAMILY}}*
+          ls -l "${{steps.download-artifacts.outputs.download-path}}/build-${{matrix.DEVICE_FAMILY}}*"
+          zip -r "${{matrix.DEVICE_FAMILY}}.zip" "${{steps.download-artifacts.outputs.download-path}}/build-${{matrix.DEVICE_FAMILY}}*"
           echo "ARTIFACT_ZIP=${{matrix.DEVICE_FAMILY}}.zip" >> "$GITHUB_OUTPUT"
       - name: Upload Release Asset
         id: upload-release-asset 
