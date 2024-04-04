@@ -24,7 +24,7 @@ cp -r $MODULE_SOURCE_PATH/*.py /tmp/micropython/ports/esp32/modules
 pushd /tmp/micropython/ports/esp32
 make submodules
 
-make BOARD=ESP32_GENERIC
+make BOARD=ESP32_GENERIC BOARD_VARIANT=SPIRAM
 cp -r build-ESP32_GENERIC $MODULE_OUTPUT_PATH
 
 make BOARD=ESP32_GENERIC_S2
