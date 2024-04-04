@@ -53,6 +53,14 @@ jobs:
             ./built/build-*/micropython.bin
           if-no-files-found: error
           retention-days: 10
+      - name: Upload artifact DEBUG
+        uses: actions/upload-artifact@v4
+        with:
+          name: Built-dir
+          path: ./built
+          if-no-files-found: error
+          retention-days: 10
+      
   release:
     needs: build
     runs-on: ubuntu-latest
