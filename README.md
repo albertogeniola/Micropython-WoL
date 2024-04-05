@@ -59,7 +59,7 @@ The firmware flash procedure is the following:
 2. Ensure you have the right OS serial port-drivers installed for your device (e.g. [CP210X](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers), [CH340](https://learn.sparkfun.com/tutorials/how-to-install-ch340-drivers/all), etc)
 3. Ensure you have a valid python interpreter on your system and install esptool via the following command
     ```bash
-    python -m pip install esptool
+    python -m pip install esptool adafruit-ampy
     ```
 4. Run the appropriate flash command, based on your device.
 
@@ -72,7 +72,7 @@ The firmware flash procedure is the following:
     For the ESP32, run the following
     ```bash
     python -m esptool --chip esp8266 esp32
-    python -m esptool -p SERIAL_PORT -b 460800 --chip esp32 write_flash 0x10000 path/to/downloaded/micropython.bin
+    python -m esptool -p SERIAL_PORT -b 460800 --chip esp32 write_flash --flash_mode dio 0x1000 path/to/downloaded/firmware.bin
     ```
 
 > Note: replace **SERIAL_PORT** with the name of the serial port where the device is connected (e.g. COM5). Also, remember to update the firmware path parameter so that it points to the downloaded firmware.
@@ -197,10 +197,85 @@ You can find the 3D printable files on [ThingVerse](https://www.thingiverse.com/
 
 
 ### Hardware Setup
-TODO
+At the moment, Micropython-wol supports two hardware devices:
+- A SSD1306 oled display, connected via I2C
+- A passive piezobuzzer
+
+You need to configure the firmware to correctly handle the communication with the hardware.
+Depending on the device being used and on its specific pinout, you need to specify the connection parameters into a file called `hw.json`, to be placed into the root of the controller, composed as follows.
+
+```json
+{
+    "display": {
+        "type": "ssd1306",
+        "config": {
+            "sda_pin": 21,
+            "scl_pin": 22
+            }
+    },
+    "buzzer": {
+        "type": "piezo_passive",
+        "config": {
+            "pin": 23
+        }
+    }
+}
+```
+
+Change the pin numbers according to your specific device. For instance, the example above tells how to connect the ssd1306 display to a [ESP32-WROOM-32](docs/images/image.png) using its standard I2C pins: SDA on pin GPIO21 and SCL on pin GPIO22; the buzzer is instead connected to GPIO23. 
+
+When choosing the pins, please make sure to refer to GPIO numbering and make sure the pins you are using are compatibile with the signals. As an example, you should avoit using pins destinated to RST commands or connected to on-board leds.
+
+Once created the hw.json file, you can upload it to the board by using the following command:
+
+```bash
+ampy --port __SERIAL_PORT__ --baud 115200 put hw.json
+```
+
+Please update __SERIAL_PORT__ with the serial port identifier to which the device is connected.
+Once uploaded, reset the device (just disconnect and reconnect the power cable) and you should be good to go!
 
 ### Configure wifi via config.json
-TODO
+There are cases in which it is advisable to pre-configure the device so that you don't need to interact with the web-interface to set it up. In such cases, you can prepare the `config.json` file and upload it directly on the device, specifying your desired configuration.
+
+Here's an example:
+```json
+{
+  "config": {
+    "users": {
+      "admin": "ADMIN_PASSWORD_IN_CLEAR_TEXT"
+    },
+    "network": {
+      "ssid": "SSID_NAME",
+      "password": "SSID_PASSWORD",
+      "static_ip": null,
+      "netmask": null,
+      "gateway": null,      
+      "dns": null
+    }
+  },
+  "error": null
+}
+```
+
+Update the following values:
+-  __ADMIN_PASSWORD_IN_CLEAR_TEXT__ : Password to access the WebUI of the Micropython-WOL
+-  __SSID_NAME__ : Name of the Network's SSID to which the device should connect
+-  __SSID_PASSWORD__ : Network's SSID password
+
+If you wish to assign a static IP to the device, populate the following:
+- static_ip: ip to assign, e.g. 192.168.1.100
+- netmask: network netmask, e.g. 255.255.255.0
+- gateway: network's default gateway, e.g. 192.168.1.1
+- dns: network's dns, e.g. 192.168.1.1
+
+Once ready, upload the file to the device, using the following command:
+
+```bash
+ampy --port __SERIAL_PORT__ --baud 115200 put config.json
+```
+
+Once uploaded, reset the device (just disconnect and reconnect the power cable) and you should be good to go!
 
 ## Some Screenshots
 <a href="docs/images/login.png"><img src="docs/images/login.png" width=300></a>

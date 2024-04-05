@@ -50,7 +50,6 @@ jobs:
           name: Firmware
           path: |
             ./built/build-*/firmware.bin
-            ./built/build-*/micropython.bin
           if-no-files-found: error
           retention-days: 10
       - name: Upload artifact DEBUG
