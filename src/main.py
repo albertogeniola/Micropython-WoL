@@ -30,4 +30,5 @@ if __name__ == '__main__':
         sys.print_exception(e)
         time.sleep(2)
         print("Rebooting...")
+    finally:
         machine.reset()

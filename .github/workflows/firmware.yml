@@ -94,8 +94,7 @@ jobs:
       - name: Zip Artifact
         id: zip-artifact
         run: |
-          ls -l "${{steps.download-artifacts.outputs.download-path}}"
-          zip -r "${{matrix.DEVICE_FAMILY}}.zip" . --include "${{steps.download-artifacts.outputs.download-path}}/build-${{matrix.DEVICE_FAMILY}}*"
+          zip -r "${{matrix.DEVICE_FAMILY}}.zip" ${{steps.download-artifacts.outputs.download-path}}/build-${{matrix.DEVICE_FAMILY}}*
           echo "ARTIFACT_ZIP=${{matrix.DEVICE_FAMILY}}.zip" >> "$GITHUB_OUTPUT"
       - name: Upload Release Asset
         id: upload-release-asset 
